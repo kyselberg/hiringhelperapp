@@ -18,12 +18,14 @@ import { CheckCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-export default function LoginForm() {
+export default function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const validateEmail = (email: string) => {
@@ -53,16 +55,31 @@ export default function LoginForm() {
     }
   };
 
+  const validateConfirmPassword = (confirmPwd: string) => {
+    if (!confirmPwd) {
+      setConfirmPasswordError("Please confirm your password");
+      return false;
+    } else if (confirmPwd !== password) {
+      setConfirmPasswordError("Passwords do not match");
+      return false;
+    } else {
+      setConfirmPasswordError("");
+      return true;
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
+    const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
 
-    if (isEmailValid && isPasswordValid) {
+    if (isEmailValid && isPasswordValid && isConfirmPasswordValid) {
       // In a real app, you would validate credentials here
       // This is just a simulation for the demo
       setLoading(true);
+
       setTimeout(() => {
         setLoading(false);
         setIsSuccess(true);
@@ -74,18 +91,16 @@ export default function LoginForm() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl">Sign up</CardTitle>
           <CardDescription>
-            Enter your credentials to access your account
+            Enter your credentials to create your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isSuccess && (
             <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
               <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription>
-                Login successful! Welcome back.
-              </AlertDescription>
+              <AlertDescription>Welcome! All is set!</AlertDescription>
             </Alert>
           )}
           <form onSubmit={handleSubmit}>
@@ -128,22 +143,43 @@ export default function LoginForm() {
                     <p className="text-sm text-red-500">{passwordError}</p>
                   )}
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      if (confirmPasswordError)
+                        validateConfirmPassword(e.target.value);
+                    }}
+                    onBlur={() => validateConfirmPassword(confirmPassword)}
+                    className={confirmPasswordError ? "border-red-500" : ""}
+                    required
+                  />
+                  {confirmPasswordError && (
+                    <p className="text-sm text-red-500">
+                      {confirmPasswordError}
+                    </p>
+                  )}
+                </div>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="animate-spin" />}
-                Login
+                Sign up
               </Button>
             </div>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
+            Already have an account?{" "}
             <Link
-              href="/signup"
+              href="/login"
               className="font-medium text-primary hover:underline"
             >
-              Sign up here
+              Login here
             </Link>
           </p>
         </CardFooter>
