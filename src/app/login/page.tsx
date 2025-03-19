@@ -14,17 +14,19 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { api } from "@/trpc/react";
 import { CheckCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 export default function LoginForm() {
+  const { mutateAsync, isPending, error, isSuccess } =
+    api.auth.login.useMutation();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -53,20 +55,21 @@ export default function LoginForm() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
 
     if (isEmailValid && isPasswordValid) {
-      // In a real app, you would validate credentials here
-      // This is just a simulation for the demo
-      setLoading(true);
-      setTimeout(() => {
-        setLoading(false);
-        setIsSuccess(true);
-      }, 1500);
+      try {
+        await mutateAsync({
+          email,
+          password,
+        });
+      } catch (error) {
+        console.error(error);
+      }
     }
   };
 
@@ -86,6 +89,12 @@ export default function LoginForm() {
               <AlertDescription>
                 Login successful! Welcome back.
               </AlertDescription>
+            </Alert>
+          )}
+          {error && (
+            <Alert className="mb-4 border-red-200 bg-red-50 text-red-800">
+              <CheckCircle className="h-4 w-4 text-red-600" />
+              <AlertDescription>{error.message}</AlertDescription>
             </Alert>
           )}
           <form onSubmit={handleSubmit}>
@@ -129,8 +138,8 @@ export default function LoginForm() {
                   )}
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="animate-spin" />}
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending && <Loader2 className="animate-spin" />}
                 Login
               </Button>
             </div>

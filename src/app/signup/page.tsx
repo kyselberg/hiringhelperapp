@@ -14,19 +14,24 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { api } from "@/trpc/react";
 import { CheckCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function SignupForm() {
+  const { mutateAsync, error, isPending, isSuccess } =
+    api.auth.signup.useMutation();
+
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [isSuccess, setIsSuccess] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -68,7 +73,7 @@ export default function SignupForm() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const isEmailValid = validateEmail(email);
@@ -76,14 +81,11 @@ export default function SignupForm() {
     const isConfirmPasswordValid = validateConfirmPassword(confirmPassword);
 
     if (isEmailValid && isPasswordValid && isConfirmPasswordValid) {
-      // In a real app, you would validate credentials here
-      // This is just a simulation for the demo
-      setLoading(true);
-
-      setTimeout(() => {
-        setLoading(false);
-        setIsSuccess(true);
-      }, 1500);
+      await mutateAsync({
+        email,
+        password,
+      });
+      await router.replace("/successfulSignup");
     }
   };
 
@@ -101,6 +103,12 @@ export default function SignupForm() {
             <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
               <CheckCircle className="h-4 w-4 text-green-600" />
               <AlertDescription>Welcome! All is set!</AlertDescription>
+            </Alert>
+          )}
+          {error && (
+            <Alert className="text-grereden-800 mb-4 border-red-200 bg-red-50">
+              <CheckCircle className="h-4 w-4 text-red-600" />
+              <AlertDescription>{error.message}</AlertDescription>
             </Alert>
           )}
           <form onSubmit={handleSubmit}>
@@ -165,8 +173,8 @@ export default function SignupForm() {
                   )}
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="animate-spin" />}
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending && <Loader2 className="animate-spin" />}
                 Sign up
               </Button>
             </div>
