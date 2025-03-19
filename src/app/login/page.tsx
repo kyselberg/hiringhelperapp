@@ -21,18 +21,53 @@ import { useState } from "react";
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      setEmailError("Email is required");
+      return false;
+    } else if (!emailRegex.test(email)) {
+      setEmailError("Please enter a valid email address");
+      return false;
+    } else {
+      setEmailError("");
+      return true;
+    }
+  };
+
+  const validatePassword = (password: string) => {
+    if (!password) {
+      setPasswordError("Password is required");
+      return false;
+    } else if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+      return false;
+    } else {
+      setPasswordError("");
+      return true;
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you would validate credentials here
-    // This is just a simulation for the demo
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setIsSuccess(true);
-    }, 2000);
+
+    const isEmailValid = validateEmail(email);
+    const isPasswordValid = validatePassword(password);
+
+    if (isEmailValid && isPasswordValid) {
+      // In a real app, you would validate credentials here
+      // This is just a simulation for the demo
+      setLoading(true);
+      setTimeout(() => {
+        setLoading(false);
+        setIsSuccess(true);
+      }, 1500);
+    }
   };
 
   return (
@@ -63,9 +98,17 @@ export default function LoginForm() {
                     type="email"
                     placeholder="your@email.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (emailError) validateEmail(e.target.value);
+                    }}
+                    onBlur={() => validateEmail(email)}
+                    className={emailError ? "border-red-500" : ""}
                     required
                   />
+                  {emailError && (
+                    <p className="text-sm text-red-500">{emailError}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
@@ -73,9 +116,17 @@ export default function LoginForm() {
                     id="password"
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (passwordError) validatePassword(e.target.value);
+                    }}
+                    onBlur={() => validatePassword(password)}
+                    className={passwordError ? "border-red-500" : ""}
                     required
                   />
+                  {passwordError && (
+                    <p className="text-sm text-red-500">{passwordError}</p>
+                  )}
                 </div>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
